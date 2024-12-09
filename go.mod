@@ -1,4 +1,4 @@
-module ao-labs/protoc-gen-fake
+module github.com/ao-labs/protoc-gen-fake
 
 go 1.23
 
