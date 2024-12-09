@@ -42,7 +42,7 @@ func GenerateFake(gen *protogen.Plugin, file *protogen.File) {
 
 	// Import section
 	g.P("import (")
-	g.P(`    "github.com/ao-labs/proto-gen-fake/pkg/fake"`)
+	g.P(`    "github.com/ao-labs/protoc-gen-fake/pkg/fake"`)
 	if hasEmptyMessage {
 		g.P(`    emptypb "google.golang.org/protobuf/types/known/emptypb"`)
 	}
