@@ -16,8 +16,7 @@ func GenerateFake(gen *protogen.Plugin, file *protogen.File) {
 			hasRPCService = true
 			// Empty 메시지 사용 체크
 			for _, method := range service.Methods {
-				if method.Output.Desc.FullName() == "google.protobuf.Empty" ||
-					method.Input.Desc.FullName() == "google.protobuf.Empty" {
+				if method.Output.Desc.FullName() == "google.protobuf.Empty" {
 					hasEmptyMessage = true
 					break
 				}
