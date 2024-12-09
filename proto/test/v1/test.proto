@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package example;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "example/generated";
 
 service TestService {
@@ -17,4 +19,6 @@ message GetDataResponse {
   string name = 2;
   int32 value = 3;
   optional string image = 4;
+  repeated string tags = 5;
+  google.protobuf.Empty empty = 6;
 }

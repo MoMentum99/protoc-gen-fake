@@ -6,6 +6,32 @@ import (
 )
 
 func GenerateFake(gen *protogen.Plugin, file *protogen.File) {
+	// rpc가 있는 서비스만 필터링
+	hasRPCService := false
+	hasEmptyMessage := false
+
+	// 먼저 Empty 메시지 사용 여부와 RPC 서비스 존재 여부 체크
+	for _, service := range file.Services {
+		if len(service.Methods) > 0 {
+			hasRPCService = true
+			// Empty 메시지 사용 체크
+			for _, method := range service.Methods {
+				if method.Output.Desc.FullName() == "google.protobuf.Empty" ||
+					method.Input.Desc.FullName() == "google.protobuf.Empty" {
+					hasEmptyMessage = true
+					break
+				}
+			}
+		}
+		if hasEmptyMessage {
+			break
+		}
+	}
+
+	if !hasRPCService {
+		return
+	}
+
 	filename := file.GeneratedFilenamePrefix + "_fake.pb.go"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 
@@ -14,23 +40,33 @@ func GenerateFake(gen *protogen.Plugin, file *protogen.File) {
 	g.P("package ", file.GoPackageName)
 	g.P()
 
-	// Import the fake package
+	// Import section
 	g.P("import (")
-	g.P(`    "github.com/ao-labs/protoc-gen-fake/pkg/fake"`)
+	g.P(`    "github.com/ao-labs/proto-gen-fake/pkg/fake"`)
+	if hasEmptyMessage {
+		g.P(`    emptypb "google.golang.org/protobuf/types/known/emptypb"`)
+	}
 	g.P(")")
 	g.P()
 
-	// Generate responses for each service
 	for _, service := range file.Services {
+		if len(service.Methods) == 0 {
+			continue
+		}
+
 		g.P("// Default responses for ", service.GoName)
 		g.P("var Default", service.GoName, "Responses = map[string]fake.Response{")
 
 		for _, method := range service.Methods {
 			g.P(`    "`, buildMethodPath(service, method), `": {`)
 			g.P(`        Method: "`, buildMethodPath(service, method), `",`)
-			g.P(`        Response: &`, method.Output.GoIdent.GoName, `{`)
-			generateDefaultResponseFields(g, method.Output)
-			g.P("        },")
+			if method.Output.Desc.FullName() == "google.protobuf.Empty" {
+				g.P(`        Response: &emptypb.Empty{},`)
+			} else {
+				g.P(`        Response: &`, method.Output.GoIdent.GoName, `{`)
+				generateDefaultResponseFields(g, method.Output)
+				g.P("        },")
+			}
 			g.P("    },")
 		}
 
