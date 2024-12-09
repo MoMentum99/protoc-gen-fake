@@ -5,7 +5,6 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
-// GenerateFake generates the fake response code for a proto file
 func GenerateFake(gen *protogen.Plugin, file *protogen.File) {
 	filename := file.GeneratedFilenamePrefix + "_fake.pb.go"
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
@@ -15,52 +14,39 @@ func GenerateFake(gen *protogen.Plugin, file *protogen.File) {
 	g.P("package ", file.GoPackageName)
 	g.P()
 
-	// Generate imports
+	// Import the fake package
 	g.P("import (")
-	g.P(`    "context"`)
-	g.P(`    "google.golang.org/grpc"`)
-	g.P(`    "google.golang.org/protobuf/proto"`)
+	g.P(`    "github.com/ao-labs/protoc-gen-fake/pkg/fake"`)
 	g.P(")")
 	g.P()
 
-	// Generate FakeResponse type if not already defined
-	generateFakeResponseType(g)
-
 	// Generate responses for each service
 	for _, service := range file.Services {
-		generateServiceFakes(g, service)
+		g.P("// Default responses for ", service.GoName)
+		g.P("var Default", service.GoName, "Responses = map[string]fake.Response{")
+
+		for _, method := range service.Methods {
+			g.P(`    "`, buildMethodPath(service, method), `": {`)
+			g.P(`        Method: "`, buildMethodPath(service, method), `",`)
+			g.P(`        Response: &`, method.Output.GoIdent.GoName, `{`)
+			generateDefaultResponseFields(g, method.Output)
+			g.P("        },")
+			g.P("    },")
+		}
+
+		g.P("}")
+		g.P()
 	}
-}
-
-func generateFakeResponseType(g *protogen.GeneratedFile) {
-	g.P("// FakeResponse represents a pre-defined response for a gRPC method")
-	g.P("type FakeResponse struct {")
-	g.P("    Method   string")
-	g.P("    Response proto.Message")
-	g.P("    Error    error")
-	g.P("}")
-	g.P()
-}
-
-func generateServiceFakes(g *protogen.GeneratedFile, service *protogen.Service) {
-	g.P("// Default responses for ", service.GoName)
-	g.P("var Default", service.GoName, "Responses = map[string]FakeResponse{")
-
-	for _, method := range service.Methods {
-		g.P(`    "`, buildMethodPath(service, method), `": {`)
-		g.P(`        Method: "`, buildMethodPath(service, method), `",`)
-		g.P(`        Response: &`, method.Output.GoIdent.GoName, `{`)
-		generateDefaultResponseFields(g, method.Output)
-		g.P("        },")
-		g.P("    },")
-	}
-
-	g.P("}")
-	g.P()
 }
 
 func generateDefaultResponseFields(g *protogen.GeneratedFile, msg *protogen.Message) {
 	for _, field := range msg.Fields {
+		// Skip if field is oneof
+		if field.Oneof != nil {
+			continue
+		}
+
+		// Generate value
 		value := getDefaultValueForField(field)
 		if value != "" {
 			g.P("            ", field.GoName, ": ", value, ",")
