@@ -95,3 +95,12 @@ conn := NewFakeClientConn(responses)
 - Compatible with both protoc and buf
 - Easy integration with existing gRPC clients
 
+
+## TODO
+
+- [ ] Handle enum types properly
+- [ ] Support nested message types with proper defaults
+- [ ] Add oneOf field support
+- [ ] Support for map types
+- [ ] Timestamp and duration field support
+- [ ] Custom default value configuration
