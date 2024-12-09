@@ -5,7 +5,7 @@ A protocol buffer compiler plugin that generates fake gRPC client responses for 
 ## Installation
 
 ```bash
-go install github.com/ao-labs/proto-gen-fake/cmd/protoc-gen-fake@latest
+go install github.com/ao-labs/protoc-gen-fake@latest
 ```
 
 ## Usage
@@ -47,7 +47,7 @@ service UserService {
 Will generate:
 
 ```go
-var DefaultUserServiceResponses = map[string]FakeResponse{
+var DefaultUserServiceResponses = map[string]Response{
     "/package.UserService/GetUser": {
         Method: "/package.UserService/GetUser",
         Response: &GetUserResponse{
@@ -76,7 +76,7 @@ You can customize the default responses:
 
 ```go
 responses := example.DefaultUserServiceResponses
-responses["/package.UserService/GetUser"] = FakeResponse{
+responses["/package.UserService/GetUser"] = Response{
     Method: "/package.UserService/GetUser",
     Response: &example.GetUserResponse{
         Id: "custom_id",
