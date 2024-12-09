@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package example;
+
+option go_package = "example/generated";
+
+service TestService {
+  rpc GetData (GetDataRequest) returns (GetDataResponse);
+}
+
+message GetDataRequest {
+  string id = 1;
+}
+
+message GetDataResponse {
+  string id = 1;
+  string name = 2;
+  int32 value = 3;
+  optional string image = 4;
+}
